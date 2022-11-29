@@ -1,9 +1,10 @@
-import socket
+from communicator import Communicator
+class Player(Communicator):
 
-class Player:
-
-    def __init__(self, _group_size) -> None:
+    def __init__(self, _group_size, _sk, _id) -> None:
         self.group_size = _group_size
+        self.sk = _sk
+        super.__init__(_id)
 
     def group_add(self, x, y):
         return (x + y) % self.group_size
@@ -16,5 +17,6 @@ class Player:
 
     def group_inv(self, x):
         return pow(x, self.group_size - 2, self.group_size)
+
 
 
