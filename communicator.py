@@ -19,6 +19,9 @@ class Communicator:
             print(f"Connected by {addr}")
             return conn
     
+    def connect(self):
+        pass
+
     def send(self, conn, data):
         with conn:
             conn.sendall(data)
