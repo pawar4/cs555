@@ -1,38 +1,30 @@
 import socket
 
 class Communicator:
-    addr_dict = {1: ("localhost", 10880), 
-                2: ("localhost", 10881), 
-                3: ("localhost", 10882),
-                "client": ("localhost", 10883)}
+    addr_dict = {"P1": ("localhost", 10880), 
+                "P2": ("localhost", 10881), 
+                "P3": ("localhost", 10882),
+                "C": ("localhost", 10883)}
 
     def __init__(self, _id) -> None:
         self.id = _id
         self.addr = Communicator.addr_dict.get(self.id)
 
-    def listen(self) -> socket:
-
+    def send(self, receiver_id, data):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-            sock.bind(self.addr[0], self.addr[1])
+            sock.connect(Communicator.addr_dict.get(receiver_id))
+            sock.sendall(data)
+
+    def receive(self):
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            sock.bind(self.addr)
             sock.listen()
             conn, addr = sock.accept()
-            print(f"Connected by {addr}")
-            return conn
-    
-    def connect(self):
-        pass
-
-    def send(self, conn, data):
-        with conn:
-            conn.sendall(data)
-
-    def recv(self, conn):
-        with conn:
-            data = conn.recv()
-        return data
+            with conn:
+                data = conn.recv(1024)
+                return data
 
     def broadcast(self, data):
-        pass
-
-    def share(self, data):
-        pass
+        for k, v in Communicator.addr_dict.items():
+            if k != self.id:
+                self.send(k, data)
