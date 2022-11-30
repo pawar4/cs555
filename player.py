@@ -10,6 +10,9 @@ class Player(Communicator):
         self.h2 = -1
         self.sk = -1
         self.scoeff = -1
+        self.c1 = -1
+        self.c2 = -1
+        self.c3 = -1
         super().__init__(_id)
 
     def group_add(self, x: int, y: int) -> int:
@@ -22,7 +25,7 @@ class Player(Communicator):
         return (x * y) % self.q
 
     def group_div(self, x: int, y: int) -> int:
-        return x * self.group_inv(y)
+        return self.group_mul(x, self.group_inv(y))
 
     def group_inv(self, x: int) -> int:
         return pow(x, self.q - 2, self.q)
@@ -57,10 +60,5 @@ class Player(Communicator):
 
 if __name__ == "__main__":
     p = Player("P1")
-    p.scoeff = 1
-    p.q = 37
-    shares = p.sshare(10)
-    print(f"Shares = {shares}")
-
-    k = p.scombine(shares)
-    print(f"k = {k}")
+    
+    print(f"s = {type(p.sshare(10)[0][1])}")
