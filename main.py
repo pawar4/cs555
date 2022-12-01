@@ -6,6 +6,7 @@ import yaml
 from player import Player
 from client import Client
 from Crypto.Util import number
+from algorand import send_money, receive_money, get_balance
 
 
 '''
@@ -35,6 +36,11 @@ def execute_P1(id: str):
 
   # Wait for client to ping to start communication.
   p1.receive()
+
+  # Check start balance.
+  with open('config.yaml', 'r') as file:
+    input = yaml.safe_load(file)
+    start_balance = get_balance(input['party_mnemonic'])
   
   # Generate q, g, h.
   p1.q = number.getPrime(10)
@@ -85,8 +91,21 @@ def execute_P1(id: str):
   # Do local multiply to get f1 = f0 * c3.
   f1 = p1.group_mul(f0, p1.c3)
 
-  # Send result to client.
-  p1.send("C", pickle.dumps(f1))
+  # Get money from smart contract.
+  with open('config.yaml', 'r') as file:
+    inputs = yaml.safe_load(file)
+    receive_money(inputs['party_mnemonic'])
+
+    # Check account balance.
+    end_balance = get_balance(input['party_mnemonic'])
+
+  print(f"end = {end_balance}, start = {start_balance}")
+  if end_balance >= start_balance + 100000:
+    # Send result to client.
+    p1.send("C", pickle.dumps(f1))
+  else:
+    print("HERE")
+    p1.send("C", pickle.dumps(-1))
 
 
 '''
@@ -140,9 +159,6 @@ def execute_P2(id: str):
   # Do local multiply to get f1 = f0 * c3.
   f1 = p2.group_mul(f0, p2.c3)
 
-  # Send result to client.
-  p2.send("C", pickle.dumps(f1))
-
 
 '''
   Executes the P3's instrutions.
@@ -195,9 +211,6 @@ def execute_P3(id: str):
   # Do local multiply to get f1 = f0 * c3.
   f1 = p3.group_mul(f0, p3.c3)
 
-  # Send result to client.
-  p3.send("C", pickle.dumps(f1))
-
 
 '''
   Executes the client's instrutions.
@@ -224,12 +237,12 @@ def execute_client(id: str):
   # Open config file and read in values.
   with open('config.yaml', 'r') as file:
     inputs = yaml.safe_load(file)
-    print(inputs)
 
   # Encrypt messages using El Gamal, and get Shamir share of sk.
   m1 = inputs["m1"]
   m2 = inputs["m2"]
   m3 = inputs["m3"]
+  print(f"m1 = {m1}, m2 = {m2}, m3 = {m3}")
   c1 = client.encrypt(m1)
   c2 = client.encrypt(m2)
   c3 = client.encrypt(pow(client.g, m3, client.q))
@@ -272,19 +285,27 @@ def execute_client(id: str):
   client.send("P2", pickle.dumps(f0))
   client.send("P3", pickle.dumps(f0))
 
+  # Send money to P1.
+  with open('config.yaml', 'r') as file:
+    input = yaml.safe_load(file)
+    send_money(inputs['client_mnemonic'], inputs['party_mnemonic'])
+
   f1 = pickle.loads(client.receive())
+  if f1 == -1:
+    print("I AM BROKE")
+  else:
 
-  # Get f2.
-  f2 = client.decrypt(client.decrypt(f1))
+    # Get f2.
+    f2 = client.decrypt(client.decrypt(f1))
 
-  # Get answer from f2.
-  ans = 0
-  for i in range(1, client.q):
-    if pow(client.g, i, client.q) == f2:
-      ans = i
-      break
-  
-  print(f"ANSWER = {ans}")
+    # Get answer from f2.
+    ans = 0
+    for i in range(1, client.q):
+      if pow(client.g, i, client.q) == f2:
+        ans = i
+        break
+    
+    print(f"ANSWER = {ans}")
 
 
 
