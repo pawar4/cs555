@@ -32,7 +32,7 @@ def execute_P1(id: str):
 
   # Create a player object.
   p1 = Player(id)
-  print("RUNNING %s" % id)
+  print("Running %s..." % id)
 
   # Wait for client to ping to start communication.
   p1.receive()
@@ -49,7 +49,7 @@ def execute_P1(id: str):
   
   # Broadcast q, g, h.
   msg = [p1.q, p1.g, p1.h1]
-  print(f"order of group (q) = {p1.q}, generator (g) = {p1.g}")
+  print(f"P1: Order of group (q) = {p1.q}, Generator (g) = {p1.g}")
   p1.broadcast(pickle.dumps(msg))
 
   # Receive the coefficient for Shamir Sharing and save it.
@@ -99,8 +99,8 @@ def execute_P1(id: str):
     # Check account balance.
     end_balance = get_balance(input['party_mnemonic'])
 
-  print(f"end = {end_balance}, start = {start_balance}")
-  if end_balance >= start_balance + 100000:
+  print(f"P1: Money Received = {(end_balance - start_balance) / 1000000} ALGORAND")
+  if end_balance >= start_balance + 10000 * 1000000:
     # Send result to client.
     p1.send("C", pickle.dumps(f1))
   else:
@@ -115,7 +115,7 @@ def execute_P2(id: str):
 
   # Create a player object.
   p2 = Player(id)
-  print("RUNNING %s" % id)
+  print("Running %s..." % id)
 
   # Receive q, g, h and save them.
   msg = pickle.loads(p2.receive())
@@ -167,7 +167,7 @@ def execute_P3(id: str):
 
   # Create a player object.
   p3 = Player(id)
-  print("RUNNING %s" % id)
+  print("Running %s..." % id)
 
   # Receive q, g, h and save them.
   msg = pickle.loads(p3.receive())
@@ -219,7 +219,7 @@ def execute_client(id: str):
   
   # Create a client object.
   client = Client(id)
-  print("RUNNING %s" % id)
+  print("Running %s..." % id)
 
   # Send ping_msg to P1 to start communication.
   client.send("P1", b"ping")
@@ -232,7 +232,7 @@ def execute_client(id: str):
 
   # Create full key sk.
   client.sk =  pow(client.h1, random.randint(2, client.q), client.q)
-  print(f"Secret Key (sk) = {client.sk}")
+  print(f"C: Secret Key (sk) = {client.sk}")
 
   # Open config file and read in values.
   with open('config.yaml', 'r') as file:
@@ -242,7 +242,7 @@ def execute_client(id: str):
   m1 = inputs["m1"]
   m2 = inputs["m2"]
   m3 = inputs["m3"]
-  print(f"m1 = {m1}, m2 = {m2}, m3 = {m3}")
+  print(f"C: m1 = {m1}, m2 = {m2}, m3 = {m3}")
   c1 = client.encrypt(m1)
   c2 = client.encrypt(m2)
   c3 = client.encrypt(pow(client.g, m3, client.q))
@@ -292,7 +292,7 @@ def execute_client(id: str):
 
   f1 = pickle.loads(client.receive())
   if f1 == -1:
-    print("I AM BROKE")
+    print("C: Could not send 10,000 ALGORAND")
   else:
 
     # Get f2.
@@ -305,7 +305,7 @@ def execute_client(id: str):
         ans = i
         break
     
-    print(f"ANSWER = {ans}")
+    print(f"C: Answer received = {ans}")
 
 
 
